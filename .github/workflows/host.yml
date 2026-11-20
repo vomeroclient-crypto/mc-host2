@@ -1,0 +1,50 @@
+name: Minecraft Server
+
+on:
+  workflow_dispatch:
+    inputs:
+      op_name:
+        description: "Minecraft username to /op when the server starts (optional)"
+        required: false
+        default: ""
+      first_time_setup:
+        description: "On a brand-new world, auto-run /generatebases, /placeschematics, /generategeodes"
+        type: boolean
+        default: true
+
+concurrency:
+  group: minecraft-server
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  host:
+    runs-on: ${{ vars.RUNNER_LABEL || 'mc-64core' }}
+    timeout-minutes: 355
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+
+      - name: Build plugin
+        continue-on-error: true
+        run: mvn -B -q package -DskipTests
+
+      - name: Run server
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PLAYIT_SECRET: ${{ secrets.PLAYIT_SECRET }}
+          OP_NAME: ${{ inputs.op_name }}
+          FIRST_SETUP: ${{ inputs.first_time_setup }}
+          MC_VERSION: "1.20.4"
+          MC_RAM_GB: ${{ vars.MC_RAM_GB || '100' }}
+          RCLONE_CONFIG_TEXT: ${{ secrets.RCLONE_CONFIG }}
+          BACKUP_REMOTE: ${{ vars.BACKUP_REMOTE }}
+        run: bash scripts/run-server.sh
