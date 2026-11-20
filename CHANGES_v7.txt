@@ -1,0 +1,49 @@
+=== DonutSMP Plugin v7 — Change Log ===
+
+[Latest patch — Farm schematics & commands]
+
+NEW SCHEMATICS ADDED
+--------------------
+Stashes:
+  bluefarex       Blue_stash_Farex_2v.litematic
+  drdonutsandstone  Drdonut_s_sandstone_stash_built_by_Bubbi_and_Kyle_.litematic
+  legoninjago     Lego_Ninjago_Stash.litematic
+  prison          Prison_stash.litematic
+
+Farms (also accessible via /spawnfarm):
+  kelppress       Kelppress_v7.litematic
+  kelpfarm        Ravvix_Maccas_Kelpfarm.litematic
+  bamboofarm      16_module_Walmart_Bamboo_Farm.litematic
+  cobble64        64_module_cobble_farm.litematic
+  cobble100       100_module_cobblestone_farm.litematic
+
+NEW COMMANDS
+------------
+  /listfarms [type]
+      Lists all registered farm schematics with their placed/unused status.
+      Optional filter: kelp, bamboo, cobblestone, misc.
+      No permission required (staff and players can see the list).
+
+  /unusedfarms
+      Shows every farm that has NOT been placed in the world yet.
+      No permission required.
+
+  /addfarm <key> <filename.litematic> [type] [description]
+      Dynamically register a NEW farm from any .litematic already sitting
+      in plugins/DonutSMPWorld/schematics/. The farm is immediately available
+      via /spawnfarm and /listfarms.
+      Requires: donutsmp.admin
+      Example: /addfarm sugarcane Sugar_Cane_Farm.litematic misc "Sugar cane farm 64 wide"
+
+  /spawnfarm <key>
+      Paste a farm schematic at your current standing position.
+      The farm is marked as "placed" so /unusedfarms no longer lists it.
+      Requires: donutsmp.admin, must be a player (not console)
+
+NEW CLASSES
+-----------
+  FarmManager.java
+      Owns the FARMS registry (separate from SCHEMATICS so stashes and farms
+      don't get mixed up), tracks which farms have been placed, and handles
+      all farm command logic.
+

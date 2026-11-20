@@ -1,0 +1,219 @@
+world-border: 10000
+
+# ── Download schematics from a website ───────────────────────────────────────
+# /fetchschematics [url]  downloads into plugins/DonutSMPWorld/schematics/ and registers them.
+# A URL can be a direct .litematic link, a .zip of .litematic files, or a text file with one URL per line.
+# With no url given, /fetchschematics uses this list. Set fetch-schematics-on-startup to true to auto-download on boot.
+schematic-sources: []
+#  - "https://example.com/schematics/all.zip"
+fetch-schematics-on-startup: false
+
+# When a schematic is placed, delete everything inside its box that is NOT part of the schematic
+# (terrain, ores, water, lava, trees...). Set to false to keep natural blocks in the empty parts.
+clear-terrain-inside: true
+
+# No mobs spawn inside placed schematics (their boxes are saved in schematic-zones.txt). Mobs already inside are removed
+# when the schematic is placed. Eggs, spawn commands, breeding and golem/wither builds still work.
+no-mob-spawn-in-schematics: true
+
+# Rename step for downloaded files. Each rule is "downloaded name -> new name" (case-insensitive, .litematic optional).
+# "Base (1).litematic"-style duplicate suffixes are stripped automatically, and spaces/odd characters become "_".
+# Rename to an existing built-in file name (e.g. Bastion_Base_Stash) to replace that schematic with the download.
+schematic-renames: []
+#  - "Cool Base v2 -> cool_base"
+#  - "mega stash (final) -> Bastion_Base_Stash"
+
+# Renames made with /renameschematic are saved here automatically (what you type in /placeschematic).
+key-renames: []
+
+# Players keep their whole inventory when they die
+keep-inventory-on-death: true
+
+# After dying, teleport to a random safe spot in the overworld (like /rtp)
+random-respawn: true
+
+# Performance tuning
+performance:
+  rtp-cooldown-seconds: 15            # stops /rtp spam from generating chunks nonstop
+  max-runtime-activity-zones: 30      # stop tracking/spawning geodes after this many zones
+# Seed this server's world should use (the plugin warns on startup if it doesn't match)
+world-seed: -3868604108235547403
+
+# ── Base discoverability ─────────────────────────────────────────────────────
+# Applies to bases placed from now on (existing bases are not moved).
+base-finding:
+  distance-multiplier: 0.35   # 1.0 = original (bases 500-9000 blocks out). 0.35 = about a third of that.
+  raise-bases: 25             # lift every base this many blocks closer to the surface (0 = original depth)
+  size-depth-penalty: false   # true = big bases sink extra deep (harder)
+  decoys: false               # true = fake rooms, fake ores and fake geodes around hard bases
+  esp-shimmer: false          # true = random "ghost blocks" on the outer shell
+  stone-cap: false            # true = stone/deepslate cap over hard bases
+  land-only: true             # only place bases under dry land (skips oceans and rivers), read from the real terrain
+  # Pin a base to an exact spot, e.g. one you picked on a seed map (Chunkbase). Format "x,y,z".
+  # Keys: drdonut, greek, ice, lacchez, dils, regear, purplex, redafk, gambling,
+  #       bastion, coliseum, sandstone, voidview, voidxmas, cathedral, casino, mud
+  fixed-locations: {}
+  #  drdonut: "1200,-30,-800"
+
+# ── Spacing between bases / stashes / farms / schematics ─────────────────────
+# New placements keep at least min-gap blocks (edge to edge, on the XZ plane) from every existing base, stash,
+# farm and schematic. If an area is too crowded the placer retries with 2/3 then 1/3 of the gap, then skips it.
+# /removebase [preview] [minGap] deletes existing placements that are closer than this to an older one
+# (farms and hand-placed bases are never deleted).
+base-spacing:
+  enabled: true
+  min-gap: 150
+
+removebase:
+  blocks-per-tick: 20000      # how fast /removebase wipes blocks (lower = less lag, slower)
+
+base-count: 8
+stash-count: 20
+geode-count: 15
+
+# How deep underground to build bases (Y level)
+base-depth: -30
+
+# Activity simulation - geodes spawn near "active" areas
+activity-radius: 500
+geodes-per-activity-zone: 3
+
+# Base types to generate (all enabled by default)
+base-types:
+  media-base: true      # Big flashy base like a YouTuber
+  baltop-base: true     # Rich player hoarding base  
+  nomad-stash: true     # Small hidden stash
+  main-base: true       # Normal player main base
+  trap-base: true       # Looks good, fully trapped
+  regear-base: true     # Regear base schematic (28x14x14)
+  purplex-base: true    # Purplex Purple Radioactive Base (84x37x67, extra hidden)
+
+# Loot tiers
+loot:
+  nomad:
+    - IRON_SWORD:1
+    - IRON_PICKAXE:1
+    - BREAD:16
+    - IRON_INGOT:8
+    - COAL:32
+  main:
+    - DIAMOND:5
+    - DIAMOND_SWORD:1
+    - ENCHANTED_BOOK:2
+    - GOLDEN_APPLE:3
+    - OBSIDIAN:16
+    - IRON_INGOT:32
+  baltop:
+    - DIAMOND:32
+    - DIAMOND_BLOCK:5
+    - NETHERITE_SCRAP:3
+    - GOLDEN_APPLE:16
+    - ENCHANTED_BOOK:5
+    - ELYTRA:1
+  media:
+    - DIAMOND_BLOCK:10
+    - NETHERITE_INGOT:2
+    - GOLDEN_APPLE:32
+    - ENCHANTED_BOOK:8
+    - TOTEM_OF_UNDYING:2
+    - ELYTRA:1
+    - SHULKER_BOX:3
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ANTICHEAT TUNING
+# Bigger bases are harder to find because:
+#   1. ESP shimmer makes their outline appear/disappear 50% randomly per block
+#   2. Concealment scales with footprint (more fake ores, wider scatter)
+#   3. AC thresholds below are tightened for the checks that matter during raiding
+#      (speed/flight for trident users, reach/killaura for combat at the base)
+# Relog is NOT patched — it's the intended discovery method.
+# ─────────────────────────────────────────────────────────────────────────────
+anticheat:
+
+  # Movement checks — tightened so trident/elytra abuse near bases flags faster
+  movement:
+    speed:
+      max-horizontal-speed: 0.38       # vanilla sprint = 0.29, tight but not false-positive
+      punishments:
+        2: { action: WARN }
+        4: { action: KICK }
+        7: { action: BAN, duration: "7d", reason: "Movement Exploit" }
+    flight:
+      max-air-time-ticks: 30           # vanilla fall = ~20 ticks, elytra/fly hack trips at 30
+      punishments:
+        2: { action: WARN }
+        4: { action: KICK }
+        7: { action: BAN, duration: "7d", reason: "Fly Hack" }
+
+  # Combat checks — tightened for base raiding scenarios
+  combat:
+    killaura:
+      max-attack-angle: 60.0           # down from 70, legit swings stay under 60
+      max-targets-per-second: 3        # aura hits 4+/sec, legit PvP rarely exceeds 2
+      punishments:
+        2: { action: WARN }
+        4: { action: KICK }
+        6: { action: BAN, duration: "14d", reason: "Unfair Advantage" }
+    reach:
+      max-reach-distance: 3.1          # vanilla = 3.0, slight buffer for lag
+      punishments:
+        2: { action: WARN }
+        5: { action: KICK }
+        8: { action: BAN, duration: "14d", reason: "Combat Range Exploit" }
+
+  # World checks — mining near a big base involves a lot of block breaking;
+  # these are kept reasonable to avoid false-positives from legit deepslate mining
+  world:
+    nuker:
+      min-break-delay-ms: 55           # slightly tighter than default 60
+      max-blocks-per-second: 10        # down from 12, still allows fast mining
+      punishments:
+        4: { action: WARN }
+        7: { action: KICK }
+        12: { action: BAN, duration: "3d", reason: "World Exploit" }
+    fast-place:
+      min-place-delay-ms: 45
+      punishments:
+        5: { action: WARN }
+        9: { action: KICK }
+        14: { action: BAN, duration: "1d", reason: "World Exploit" }
+
+  inventory:
+    fast-use:
+      min-click-delay-ms: 85           # slightly tighter
+      punishments:
+        5: { action: WARN }
+        9: { action: KICK }
+        14: { action: BAN, duration: "1d", reason: "Inventory Exploit" }
+
+# ─────────────────────────────────────────────────────────────────────────────
+# STAFF WATCH SYSTEM
+# Passively tracks suspicious player behaviour and alerts staff with
+# donutsmp.staff permission. Mirrors what MotionClient's anti-vanish /
+# "staff live" module detects on the client side — but on the server.
+#
+# Suspicion scoring:
+#   • Fast relog (back within relog-window-seconds):         +3 pts
+#   • Login within base-proximity-radius of a known base:   +5 pts
+#   • Relog flood (3+ in 60 s):                             +4 pts
+#   • Mining along chunk-border lines underground:           +2 pts (per 8 breaks)
+#   • 60+ blocks straight underground (tunnel trace):        +2 pts
+#   • Dying with 500+ XP dropped (looted someone rich):     +3 pts
+#   • Manual /staffwatch flag:                              +15 pts
+#
+# When score >= flag-score-threshold:
+#   - All online staff get a chat alert
+#   - Player's nametag turns dark red in staff tab
+#   - Periodic location pings sent to all online staff
+#
+# /staffwatch list              — see all flagged players
+# /staffwatch goto <name>       — teleport (spectator) to player
+# /staffwatch flag <name>       — manually flag a player
+# /staffwatch clear <name>      — wipe their record
+# ─────────────────────────────────────────────────────────────────────────────
+staff-watch:
+  relog-window-seconds: 30       # relog within N seconds = suspicious
+  relog-count-threshold: 3       # 3+ relogs in 60 s = relog flood
+  flag-score-threshold: 10       # score needed to alert staff
+  base-proximity-radius: 60      # blocks from a known base to count login as "near base"
+  alert-interval-seconds: 60     # how often to re-ping staff with flagged player locations

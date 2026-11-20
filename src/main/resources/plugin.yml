@@ -1,0 +1,117 @@
+name: DonutSMPWorld
+version: 7.0.0
+main: com.donutsmp.plugin.DonutSMPPlugin
+api-version: 1.20
+description: DonutSMP Plugin — World Gen, Home, Sell, RTP, Starter Kit
+authors: [DonutSMP]
+commands:
+  # ── Home ────────────────────────────────────────────────────────────────────
+  sethome:
+    description: Set your home to your current location
+    usage: /sethome
+  home:
+    description: Teleport to your saved home
+    usage: /home
+  # ── Economy ─────────────────────────────────────────────────────────────────
+  sell:
+    description: "Sell items — /sell (hand) or /sell all"
+    usage: /sell [all]
+  bal:
+    description: Check your balance
+    usage: /bal
+  balance:
+    description: Check your balance
+    usage: /balance
+  sellprices:
+    description: List all sell prices
+    usage: /sellprices
+  # ── Starter kit ─────────────────────────────────────────────────────────────
+  givekit:
+    description: "Force-give the starter kit to a player (admin)"
+    usage: /givekit [player]
+    permission: donutsmp.admin
+  # ── RTP ─────────────────────────────────────────────────────────────────────
+  rtp:
+    description: "Random teleport — /rtp [overworld|wild|easy|mid|hard|nether|end]"
+    usage: /rtp [region]
+  rtpaddexclusion:
+    description: Register an RTP no-land zone (run after /placeschematics)
+    usage: /rtpaddexclusion <x> <z> <radius>
+    permission: donutsmp.admin
+  # ── World generation ─────────────────────────────────────────────────────────
+  generatebases:
+    description: Generate procedural underground bases
+    usage: /generatebases
+    permission: donutsmp.admin
+  placeschematics:
+    description: Place all litematic schematics
+    usage: /placeschematics
+    permission: donutsmp.admin
+  renameschematic:
+    description: Rename a schematic's name (the key used in /placeschematic)
+    usage: /renameschematic <current name> <new name>
+    permission: donutsmp.admin
+  fetchschematics:
+    description: Download schematics from a URL (.litematic, .zip, or text list of links)
+    usage: /fetchschematics [url]
+    permission: donutsmp.admin
+  placeschematicsaround:
+    description: Place schematics in a ring around you
+    usage: /placeschematicsaround [radius] [name|all]
+    aliases: [schemaround]
+    permission: donutsmp.admin
+  placeschematic:
+    description: Place one litematic schematic
+    usage: /placeschematic <key>
+    permission: donutsmp.admin
+  generategeodes:
+    description: Generate amethyst geodes
+    usage: /generategeodes
+    permission: donutsmp.admin
+  removebase:
+    description: "Remove bases/stashes/schematics that are too close to an older one — /removebase [preview] [minGap]"
+    usage: /removebase [preview] [minGap]
+    permission: donutsmp.admin
+  generatestash:
+    description: Generate a stash at your location
+    usage: /generatestash [type]
+    permission: donutsmp.admin
+  # ── Farms ────────────────────────────────────────────────────────────────────
+  listfarms:
+    description: "List registered farm schematics — /listfarms [type] (e.g. kelp, bamboo, cobblestone)"
+    usage: /listfarms [type]
+  unusedfarms:
+    description: List farm schematics that have not yet been placed in the world
+    usage: /unusedfarms
+  addfarm:
+    description: Register a .litematic in the schematics folder as a named farm
+    usage: /addfarm <key> <filename.litematic> [type] [description]
+    permission: donutsmp.admin
+  spawnfarm:
+    description: Place a farm schematic at your current location
+    usage: /spawnfarm <key>
+    permission: donutsmp.admin
+  farmtoggle:
+    description: "Start or stop a placed farm by flipping its levers — /farmtoggle <key> [on|off]"
+    usage: /farmtoggle <key> [on|off]
+    aliases: [ft]
+    permission: donutsmp.admin
+  # ── Free shop ────────────────────────────────────────────────────────────────
+  freeshop:
+    description: Open the free shop GUI
+    usage: /freeshop
+  donutinfo:
+    description: Show plugin stats
+    usage: /donutinfo
+  staffwatch:
+    description: "Staff surveillance system — list, goto, flag, clear"
+    usage: /staffwatch [list|clear <name>|goto <name>|flag <name>]
+    aliases: [sw]
+    permission: donutsmp.staff
+permissions:
+  donutsmp.admin:
+    description: Admin access
+    default: op
+  donutsmp.staff:
+    description: Staff access (view flagged players, spectate, etc.)
+    default: op

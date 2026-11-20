@@ -1,0 +1,30 @@
+HOW TO PUT THIS ON GITHUB (everything is already inside, nothing to add by hand)
+
+IMPORTANT: this folder has hidden items (.github and .gitignore). Dragging files into the GitHub website
+SKIPS hidden items, and the server will not start without .github. Use one of these instead:
+
+OPTION A - GitHub Desktop (easiest, no commands)
+  1. Install GitHub Desktop, sign in, File -> Add local repository -> pick this folder (it will offer to create one).
+  2. Publish repository (keep it Public if you want the website panel on a free plan).
+  3. Done. Hidden folders are included automatically.
+
+OPTION B - Command line (git installed)
+  Inside this folder:
+    git init
+    git add -A
+    git commit -m "mc host"
+    git branch -M main
+    git remote add origin https://github.com/YOUR-NAME/YOUR-REPO.git
+    git push -u origin main
+  (If the repo already has a README, use:  git push -u origin main --force )
+
+THEN, on GitHub, once:
+  1. Settings -> Pages -> Source: GitHub Actions
+  2. Settings -> Actions -> General -> Workflow permissions: Read and write
+  3. Settings -> Secrets and variables -> Actions -> New repository secret: PLAYIT_SECRET = your playit.gg agent secret key
+  4. Actions tab -> Publish Panel Website -> Run workflow, then open https://YOUR-NAME.github.io/YOUR-REPO/
+  5. Make a fine-grained token (only this repo; Actions = Read and write, Variables = Read and write) and paste it into the panel.
+  6. In the panel pick CPU cores / RAM, press Save size, then Start Server.
+
+PLUGINS: put .jar files in server-files/plugins/. OLD SERVER/WORLD: put its .tar.gz/.zip in import/.
+See README-HOSTER.md for details.

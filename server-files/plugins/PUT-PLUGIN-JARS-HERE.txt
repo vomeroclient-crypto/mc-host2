@@ -1,0 +1,3 @@
+Drop any plugin .jar files in this folder (server-files/plugins/).
+They are copied into the server's plugins folder on every start.
+Anything else in server-files/ (bukkit.yml, permissions.yml, plugin config folders, ...) is copied into the server folder the same way.

@@ -1,0 +1,7 @@
+To move an existing server here: put its archive in this folder as .tar.gz, .tgz or .zip
+(for example the archive-....tar.gz from your fps.ms Files page).
+- world, world_nether, world_the_end, plugins, config etc. must be at the TOP LEVEL of the archive.
+- It is unpacked only the first time, when no backup exists yet. server.jar and eula.txt inside it are ignored.
+- Imported worlds skip the automatic first-time setup (no bases/schematics get generated over your world).
+- Keep it under 100 MB (GitHub's file limit). Bigger worlds: upload the world/ folders to your rclone bucket instead.
+- Make sure MC_VERSION in .github/workflows/host.yml matches the Minecraft version of that world.

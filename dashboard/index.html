@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Minecraft Server Panel</title>
+<style>
+body{margin:0;background:#111;color:#eee;font:16px/1.5 system-ui,sans-serif}
+.wrap{max-width:560px;margin:0 auto;padding:20px}
+h1{font-size:22px;margin:0 0 16px}h2{font-size:16px;margin:0 0 10px}
+.box{background:#1b1b1b;border:1px solid #333;border-radius:8px;padding:14px;margin-bottom:14px}
+label{display:block;margin:10px 0 4px;color:#aaa;font-size:14px}
+input,select{width:100%;padding:10px;font:inherit;background:#111;color:#eee;border:1px solid #444;border-radius:6px}
+button{padding:12px 18px;font:inherit;border:0;border-radius:6px;background:#333;color:#fff;cursor:pointer}
+button:hover{background:#444}
+.go{background:#16a34a}.go:hover{background:#15803d}.no{background:#dc2626}.no:hover{background:#b91c1c}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.status{font-size:26px;font-weight:700}.small{color:#aaa;font-size:14px}
+summary{cursor:pointer;font-weight:600}
+#msg{min-height:24px;margin-top:8px}
+table{width:100%;border-collapse:collapse}td{padding:6px 2px;border-top:1px solid #333;font-size:14px}a{color:#7cb7ff}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Minecraft Server Panel</h1>
+
+  <div class="box">
+    <div class="small">Server status</div>
+    <div class="status" id="status">Not connected</div>
+    <div class="small" id="info"></div>
+    <div class="row">
+      <button class="go" id="start">Start Server</button>
+      <button id="restart">Restart Server</button>
+      <button class="no" id="stop">Stop Server</button>
+    </div>
+    <div class="small" style="margin-top:8px">Stop and Restart skip the final save (you can lose up to 30 min). Typing /stop in-game saves properly.</div>
+    <div id="msg"></div>
+  </div>
+
+  <div class="box">
+    <h2>Server address</h2>
+    <div class="small">Players type this in Minecraft to join:</div>
+    <div class="status" id="addrShow">(not set)</div>
+    <label>Address (your domain, or the address playit gives you)</label>
+    <input id="addr" placeholder="play.yourdomain.com">
+    <div class="row"><button id="saveAddr">Save address</button></div>
+    <div class="small" style="margin-top:8px">This only shows the address here. To make a domain actually work, see "Use your own domain" in the README.</div>
+  </div>
+
+  <div class="box">
+    <h2>Start options</h2>
+    <label>Your Minecraft name (you get operator when it starts, optional)</label>
+    <input id="op">
+    <label><input type="checkbox" id="first" style="width:auto"> This is a new world (build bases and schematics automatically)</label>
+  </div>
+
+  <div class="box">
+    <h2>Server size</h2>
+    <label>CPU cores</label>
+    <select id="cores">
+      <option value="mc-64core">64 cores (256 GB RAM machine)</option>
+      <option value="mc-32core">32 cores (128 GB RAM machine)</option>
+      <option value="ubuntu-latest">4 cores (free, 16 GB RAM machine)</option>
+      <option value="custom">Other (type the machine name)</option>
+    </select>
+    <input id="custom" placeholder="Machine name" style="display:none;margin-top:6px">
+    <label>RAM for the server (GB)</label>
+    <input id="ram" type="number" min="1" max="240" value="100">
+    <div class="row"><button id="save">Save size</button></div>
+    <div class="small" style="margin-top:8px">Takes effect the next time you start the server.</div>
+  </div>
+
+  <div class="box">
+    <h2>Recent runs</h2>
+    <table id="runs"></table>
+  </div>
+
+  <details class="box" id="setup" open>
+    <summary>Connect to GitHub</summary>
+    <label>Your repo (example: yourname/mc-github-host)</label>
+    <input id="repo">
+    <label>GitHub token (needs Actions and Variables read and write)</label>
+    <input id="token" type="password">
+    <div class="row"><button id="connect">Connect</button></div>
+    <div class="small" style="margin-top:8px">Saved only in this browser.</div>
+  </details>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const store={get:k=>{try{return localStorage.getItem(k)||""}catch(e){return ""}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
+const FILE="host.yml";
+let repo=store.get("repo"),token=store.get("token"),branch="main",current=null;
+// When hosted on GitHub Pages (owner.github.io/repo), fill in the repo automatically.
+if(!repo&&location.hostname.endsWith(".github.io")){
+  const n=location.pathname.split("/")[1];
+  if(n)repo=location.hostname.split(".")[0]+"/"+n;
+}
+$("repo").value=repo;$("token").value=token;
+
+function msg(t,bad){$("msg").textContent=t;$("msg").style.color=bad?"#f87171":"#aaa"}
+async function gh(path,opt={}){
+  const r=await fetch("https://api.github.com/repos/"+repo+path,{...opt,headers:{Accept:"application/vnd.github+json",Authorization:"Bearer "+token}});
+  if(!r.ok){let t="";try{t=(await r.json()).message}catch(e){}throw new Error(r.status+" "+t)}
+  return r.status===204?null:r.json().catch(()=>null);
+}
+async function getVar(n){try{return (await gh("/actions/variables/"+n)).value}catch(e){return null}}
+async function setVar(n,v){
+  try{await gh("/actions/variables/"+n,{method:"PATCH",body:JSON.stringify({name:n,value:v})})}
+  catch(e){await gh("/actions/variables",{method:"POST",body:JSON.stringify({name:n,value:v})})}
+}
+const hm=ms=>{const m=Math.max(0,Math.floor(ms/60000));return Math.floor(m/60)+"h "+(m%60)+"m"};
+
+async function refresh(){
+  if(!repo||!token)return;
+  try{
+    const runs=(await gh("/actions/workflows/"+FILE+"/runs?per_page=6")).workflow_runs||[];
+    current=runs.find(r=>r.status!=="completed")||null;
+    if(!current){$("status").textContent="Offline";$("info").textContent=""}
+    else if(current.status!=="in_progress"){$("status").textContent="Starting...";$("info").textContent="Waiting for the machine to boot"}
+    else{
+      const up=Date.now()-new Date(current.run_started_at||current.created_at);
+      $("status").textContent="Online";
+      $("info").textContent="Running for "+hm(up)+". Restarts itself in about "+hm(340*60000-up)+".";
+    }
+    $("runs").innerHTML=runs.map(r=>`<tr><td><a href="${r.html_url}" target="_blank" rel="noopener">Run ${r.run_number}</a></td><td>${r.status==="completed"?r.conclusion:r.status}</td><td>${new Date(r.created_at).toLocaleString()}</td></tr>`).join("");
+  }catch(e){msg("Could not refresh: "+e.message,true)}
+}
+async function loadSize(){
+  const c=await getVar("RUNNER_LABEL")||"mc-64core", r=await getVar("MC_RAM_GB")||"100";
+  if([...$("cores").options].some(o=>o.value===c)){$("cores").value=c}
+  else{$("cores").value="custom";$("custom").style.display="";$("custom").value=c}
+  $("ram").value=r;
+  const a=await getVar("SERVER_ADDRESS");
+  if(a){$("addr").value=a;$("addrShow").textContent=a}
+}
+async function startRun(){
+  await gh("/actions/workflows/"+FILE+"/dispatches",{method:"POST",body:JSON.stringify({ref:branch,inputs:{op_name:$("op").value.trim(),first_time_setup:String($("first").checked)}})});
+}
+async function connect(){
+  repo=$("repo").value.trim();token=$("token").value.trim();store.set("repo",repo);store.set("token",token);
+  try{
+    branch=(await gh("")).default_branch;await loadSize();await refresh();
+    $("setup").open=false;msg("Connected.");
+  }catch(e){$("status").textContent="Not connected";msg("Could not connect: "+e.message,true)}
+}
+$("connect").onclick=connect;
+$("saveAddr").onclick=async()=>{
+  try{
+    const a=$("addr").value.trim();
+    await setVar("SERVER_ADDRESS",a);$("addrShow").textContent=a||"(not set)";msg("Address saved.");
+  }catch(e){msg("Could not save: "+e.message,true)}
+};
+$("cores").onchange=()=>{$("custom").style.display=$("cores").value==="custom"?"":"none"};
+$("save").onclick=async()=>{
+  try{
+    const c=$("cores").value==="custom"?$("custom").value.trim():$("cores").value;
+    if(!c)return msg("Type the machine name.",true);
+    await setVar("RUNNER_LABEL",c);await setVar("MC_RAM_GB",String(parseInt($("ram").value,10)||100));
+    msg("Saved. Start the server to use it.");
+  }catch(e){msg("Could not save: "+e.message,true)}
+};
+$("start").onclick=async()=>{
+  if(current)return msg("The server is already running.",true);
+  try{await startRun();msg("Starting. This takes about a minute.");setTimeout(refresh,4000)}catch(e){msg("Could not start: "+e.message,true)}
+};
+$("stop").onclick=async()=>{
+  if(!current)return msg("The server is not running.",true);
+  if(!confirm("Stop now? This skips the final save and you can lose up to 30 minutes of progress."))return;
+  try{await gh("/actions/runs/"+current.id+"/cancel",{method:"POST"});msg("Stopping.");setTimeout(refresh,4000)}catch(e){msg("Could not stop: "+e.message,true)}
+};
+$("restart").onclick=async()=>{
+  if(!confirm("Restart now? This skips the final save and you can lose up to 30 minutes of progress."))return;
+  try{
+    if(current)await gh("/actions/runs/"+current.id+"/cancel",{method:"POST"});
+    msg("Stopping, then starting again...");
+    await new Promise(r=>setTimeout(r,8000));await startRun();msg("Starting. This takes about a minute.");setTimeout(refresh,4000);
+  }catch(e){msg("Could not restart: "+e.message,true)}
+};
+if(repo&&token)connect();
+setInterval(refresh,10000);
+</script>
+</body>
+</html>

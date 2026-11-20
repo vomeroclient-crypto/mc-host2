@@ -1,0 +1,81 @@
+=== DonutSMP Plugin v8 — Change Log ===
+
+[Patch: Underground big bases, regear netherite loot, chest refilling]
+
+UNDERGROUND BASES — MARIO + ALL BIG BASES
+------------------------------------------
+The following schematics were previously placed at surface level (difficulty 1-2,
+extraHidden=false). They are now forced underground with full concealment:
+
+  mario         Mario_Base_Updated.litematic          → difficulty 3, extraHidden true
+  coliseum      Big_Coliseum_Gamble_Base.litematic    → difficulty 3, extraHidden true
+  sandstone     Sandstone_Mega_Base.litematic         → difficulty 3, extraHidden true
+  greekmega     AntToeKnee69s_Greek_Megabase.litematic → difficulty 3, extraHidden true
+  pokemongym    0823ks_Pokemon_Gym.litematic          → difficulty 3, extraHidden true
+  schem1378     Schematic_1378.litematic              → difficulty 3, extraHidden true
+  lushvillage   Lush_Cave_village.litematic           → difficulty 3, extraHidden true
+  spongebob     1-1_spongebob_base.litematic          → difficulty 3, extraHidden true
+  ramen         ramens20base.litematic                → difficulty 3, extraHidden true
+  mcqueen       lightning-mcqueen-stash.litematic     → difficulty 3, extraHidden true
+
+Difficulty 3 means:
+  - Placed 5000–9000 blocks from spawn
+  - Y level -60 to -50 (deep underground, bedrock region)
+  - sizeDepthPenalty adds extra depth for large footprints
+  - extraHidden=true triggers the full decoy stack + ESP shimmer concealment layer
+    so the bases are invisible to x-ray / ESP mods
+
+REGEAR BASES — NETHERITE LOOT + UNDERGROUND
+--------------------------------------------
+The 3 regear-type schematics now:
+  1. Use the new "regear" loot tier (see below)
+  2. Are placed underground (difficulty 2, extraHidden=true)
+  3. Have their chests auto-refilled with the regear loot after pasting
+
+  regear        regear_base.litematic               → difficulty 2, tier "regear", extraHidden true
+  gambleregear  0823ks_gamble_and_regear_base.litematic → difficulty 2, tier "regear", extraHidden true
+  medieval      Medieval_Gamble_Regear_Stash.litematic  → difficulty 2, tier "regear", extraHidden true
+
+NEW LOOT TIER — "regear"  (LootTable.java)
+------------------------------------------
+Every chest in a regear base is filled with a full netherite kit:
+
+  NETHERITE_HELMET       Prot IV, Unbreaking III, Mending, Respiration III
+  NETHERITE_CHESTPLATE   Prot IV, Unbreaking III, Mending
+  NETHERITE_LEGGINGS     Prot IV, Unbreaking III, Mending
+  NETHERITE_BOOTS        Prot IV, Unbreaking III, Mending, Feather Falling IV, Depth Strider III
+  NETHERITE_SWORD        Sharpness V, Fire Aspect II, Looting III, Unbreaking III, Mending
+  NETHERITE_PICKAXE      Efficiency V, Fortune III, Unbreaking III, Mending
+  NETHERITE_AXE          Sharpness V, Efficiency V, Unbreaking III, Mending
+  TOTEM_OF_UNDYING       x3–5 per chest (always present)
+  ELYTRA                 x1 (always)
+  FIREWORK_ROCKET        x64
+  GOLDEN_APPLE           x16–32
+  ENCHANTED_GOLDEN_APPLE x2–5
+  ENDER_PEARL            x16–32
+  NETHERITE_INGOT        x2–5 (spare for anvil)
+  NETHERITE_SCRAP        x2–6
+  BOW                    Power V, Infinity, Unbreaking III, Mending
+  CROSSBOW               Quick Charge III, Piercing IV, Unbreaking III, Mending
+  SHULKER_BOX            x2–4
+  COOKED_BEEF            x64
+  ENCHANTED_BOOK         x2–5
+  EXPERIENCE_BOTTLE      x32–64
+  OBSIDIAN               x16–32
+
+POST-PASTE CHEST REFILLING  (LitematicLoader.java)
+----------------------------------------------------
+LitematicLoader.pasteLitematic() now calls refillChests() after every paste.
+It scans the full bounding box of the schematic for Chest block entities and
+overwrites their inventories with fresh LootTable.getLoot(meta.lootTier) loot.
+This ensures that:
+  - The original schematic's chest contents (often empty or test items) are replaced
+  - Every server run starts with correctly filled chests regardless of the .litematic file
+  - Loot tier is fully controlled from the SCHEMATICS registry in LitematicLoader.java
+
+Logging: "Refilled N chest(s) in <displayName> with '<tier>' loot." is emitted per paste.
+
+LOOT MULTIPLIER  (BaseGenerator.java)
+--------------------------------------
+Added "regear" → 2.5x multiplier to getLootMultiplier() so procedurally generated
+regear-tier rooms get generous loot scaling consistent with their purpose.
